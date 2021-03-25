@@ -15,10 +15,11 @@ def start(update, context):
     else:
         message = "Error loading data"
 
-    bot_keyboard: list = [['Update Cards Data'],
-                          ['Completed Cards'],
+    bot_keyboard: list = [['Update Data'],
+                          ['Resolved Stories'],
                           ['New Stories'],
-                          ['New Cards']]
+                          ['Unknown or Closed'],
+                          ['In Done but not Resolved']]
     reply_markup = ReplyKeyboardMarkup(bot_keyboard, resize_keyboard=True, one_time_keyboard=True)
 
     context.bot.send_message(chat_id=update.effective_chat.id,
@@ -37,22 +38,19 @@ def check_permissions(user_id: int):
 
 def update_data(update, context):
     if task_manager.update_data():
-        message = "Cards updated"
+        message = "Data updated"
     else:
-        message = "Cards update error"
+        message = "An Update Error has occurred"
 
     context.bot.send_message(chat_id=update.effective_chat.id,
                              text=message)
 
 
-def send_completed_cards(update, context):
-    message: dict = task_manager.get_completed_cards()
-    inline_keyboard = [[InlineKeyboardButton("Delete completed Cards", callback_data="delete_completed_cards")]]
-    reply_markup = InlineKeyboardMarkup(inline_keyboard)
+def send_resolved_cards(update, context):
+    message: dict = task_manager.get_resolved_cards()
 
     context.bot.send_message(chat_id=update.effective_chat.id,
                              text=message['message'],
-                             reply_markup=reply_markup,
                              parse_mode=ParseMode.HTML)
 
 
@@ -67,11 +65,14 @@ def send_new_stories(update, context):
                              parse_mode=ParseMode.HTML)
 
 
-def send_new_cards(update, context):
-    message: dict = task_manager.get_new_cards_without_story()
+def send_unknown_or_closed_cards(update, context):
+    message: dict = task_manager.get_unknown_or_closed_cards()
+    inline_keyboard = [[InlineKeyboardButton("Delete Unknown Cards", callback_data="delete_unknown_cards")]]
+    reply_markup = InlineKeyboardMarkup(inline_keyboard)
 
     context.bot.send_message(chat_id=update.effective_chat.id,
                              text=message['message'],
+                             reply_markup=reply_markup,
                              parse_mode=ParseMode.HTML)
 
 
@@ -82,14 +83,14 @@ def reply_to_message(update, context):
     user_id: int = update.effective_user.id
     if check_permissions(user_id):
         text: str = update.message.text
-        if text == 'Update Cards Data':
+        if text == 'Update Data':
             update_data(update, context)
-        elif text == 'Completed Cards':
-            send_completed_cards(update, context)
+        elif text == 'Resolved Stories':
+            send_resolved_cards(update, context)
         elif text == 'New Stories':
             send_new_stories(update, context)
-        elif text == 'New Cards':
-            send_new_cards(update, context)
+        elif text == 'Unknown or Closed':
+            send_unknown_or_closed_cards(update, context)
         else:
             context.bot.send_message(chat_id=update.effective_chat.id,
                                      text=text)
@@ -104,9 +105,9 @@ def button_pressed(update, context):
     query = update.callback_query
     query.answer()
 
-    if query.data == 'delete_completed_cards':
-        message = task_manager.delete_closed_stories_cards()
-        query.edit_message_text(text=message)
+    if query.data == 'delete_unknown_cards':
+        message = task_manager.delete_unknown_cards()
+        query.edit_message_text(text=message['message'])
     elif query.data == 'create_cards_in_inbox':
         message = task_manager.create_new_stories_cards_on_board()
         query.edit_message_text(text=message['message'])

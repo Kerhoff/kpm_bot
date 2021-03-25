@@ -3,7 +3,7 @@ import os
 
 
 OPEN_STORIES_QUERY= os.environ['OPEN_STORIES_QUERY']
-CLOSED_STORIES_QUERY= os.environ['CLOSED_STORIES_QUERY']
+RESOLVED_STORIES_QUERY= os.environ['RESOLVED_STORIES_QUERY']
 JIRA_URL: str = os.environ['JIRA_URL']
 JIRA_LOGIN: str = os.environ['JIRA_LOGIN']
 JIRA_PASSWORD: str = os.environ['JIRA_PASSWORD']
@@ -24,13 +24,12 @@ def _request(endpoint, query):
 
 
 def get_open_stories():
-    query = {'jql': f'{OPEN_STORIES_QUERY}', 'startAt': 0, 'maxResults': 300}
+    query = {'jql': f'{OPEN_STORIES_QUERY}', 'startAt': 0, 'maxResults': 100}
     data = _request("/search", query)
     return data['issues']
 
-
-def get_closed_stories():
-    query = {'jql': f'{CLOSED_STORIES_QUERY}', 'startAt': 0, 'maxResults': 600}
+def get_resolved_stories():
+    query = {'jql': f'{RESOLVED_STORIES_QUERY}', 'startAt': 0, 'maxResults': 100}
     data = _request("/search", query)
     return data['issues']
 
